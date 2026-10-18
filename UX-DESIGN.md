@@ -43,6 +43,10 @@ Shows user the sources used to construct the map
 
 Page where users can edit text. 
 
+### Style:
+![alt text](image-7.png)
+
+Page where user can select map style
 ### My Maps:
 
 
@@ -51,6 +55,12 @@ Page where users can edit text.
 
 The page that contains all  of the user's maps along with picture of those maps
 
+## Prototype:
+
+Link:https://www.figma.com/proto/dplkXyPyJCOaQeVkIOdziE/MapMaker-Wireframe?node-id=2-2&p=f&t=08xnKSglZYAJCKb5-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=2%3A20
+
+
+Link to Figma prototype. Begins on home page. Menu navigates to users maps. currently only one map but click on roman empire map in My maps. leads to map interface. can click through buttons to edit map. each of these buttons return to the main map page. 
 
 
 

@@ -6,6 +6,7 @@ import MyMaps from './MyMaps'
 import MapEditor from './Map-Editor'
 import Home from './Home'
 import Menu from './Menu'
+import AiChat from './AiChat'
 import MapSearch from './MapSearch'
 import EditorProvider from './map-editor/EditorProvider'
 import { StylePage, EditTextPage, SourcesPage } from './map-editor/EditorScreens'
@@ -84,6 +85,7 @@ function MapRoutes({ maps, createMap, chooseMap, renameMap }) {
         <Route path="/search" element={<MapSearch onChooseMap={chooseMap} onCreateMap={createMap} />} />
         <Route path="/menu" element={<Menu />} />
         <Route path="/MyMaps" element={<MyMaps maps={maps} onCreateMap={createMap} />} />
+        <Route path="/chat" element={<AiChat />} />        
         <Route path="/Map-Editor" element={<MapEditor onRenameMap={renameMap} />} />
         <Route path="/style" element={<StylePage />} />
         <Route path="/edit-text" element={<EditTextPage onRenameMap={renameMap} />} />

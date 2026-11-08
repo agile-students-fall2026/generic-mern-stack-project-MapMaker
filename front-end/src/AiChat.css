@@ -1,0 +1,104 @@
+.ai-chat {
+  max-width: 540px;
+  margin: auto;
+  padding: 20px;
+}
+
+.ai-chat header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.ai-chat .logo {
+  width: 45px;
+  height: 45px;
+  cursor: pointer;
+}
+
+.ai-chat h1 {
+  color: #333;
+  font-size: 24px;
+  text-align: center;
+}
+
+.ai-chat button {
+  padding: 12px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.ai-chat button:hover {
+  background-color: #1d4ed8;
+}
+
+.chat-map {
+  max-width: 390px;
+  margin: 0 auto 20px;
+}
+
+.chat-messages {
+  border-top: 1px solid #ddd;
+  padding-top: 15px;
+  margin-bottom: 20px;
+}
+
+.chat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.chat-row.ai {
+  flex-direction: row-reverse;
+}
+
+.chat-name {
+  padding: 8px 10px;
+  background: #eaf1ff;
+  color: #2563eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.chat-bubble {
+  flex: 1;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  color: #333;
+  font-size: 14px;
+}
+
+.chat-row.you .chat-bubble {
+  background: #f2f2f2;
+}
+
+.chat-form {
+  display: flex;
+  gap: 10px;
+}
+
+.chat-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.chat-form input:focus {
+  outline: none;
+  border-color: #2563eb;
+}

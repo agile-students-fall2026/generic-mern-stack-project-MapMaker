@@ -247,3 +247,33 @@
   color: white;
   border-color: #2563eb;
 }
+
+.mm-editor-prompt {
+  width: 100%;
+}
+
+.mm-editor-prompt input {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.mm-editor-prompt input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.mm-editor-prompt button {
+  background: #2563eb;
+  color: white;
+  border-radius: 8px;
+}
+
+.mm-editor-prompt button:disabled {
+  background: #ddd;
+  color: #777;
+}
+
+.mm-editor-notice {
+  width: 100%;
+}

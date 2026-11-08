@@ -107,6 +107,7 @@ export default function MapEditor({ onRenameMap }) {
     else if (color) updateMap({ styleId: color })
     else setMessage('Try "title: My map" or "make it green".')
     setInstruction('')
+    navigate('/chat', { state: { message: command } })
   }
 
   async function download() {

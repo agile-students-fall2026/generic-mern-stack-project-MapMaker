@@ -95,3 +95,10 @@
 .switch-button:hover {
   text-decoration: underline;
 }
+
+.auth-error {
+  color: #dc2626;
+  font-size: 14px;
+  margin-top: 15px;
+  text-align: center;
+}

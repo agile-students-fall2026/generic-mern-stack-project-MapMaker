@@ -57,10 +57,22 @@ describe('MapMaker Express API', () => {
     expect((await request('/api/no-such-route')).status).to.equal(404)
   })
 
-  it('receives demo login and chat forms', async () => {
-    expect((await request('/api/auth/login', 'POST', { email: 'student@example.com', password: 'test' })).status).to.equal(200)
-    expect((await request('/api/auth/register', 'POST', { email: 'student@example.com', password: 'test' })).status).to.equal(200)
-    expect((await request('/api/auth/login', 'POST', { email: 'student@example.com' })).status).to.equal(400)
+  it('registers users and checks their passwords', async () => {
+    const user = { username: 'Student', email: 'Student@Example.com', password: 'test-password' }
+    expect((await request('/api/register', 'POST', { email: user.email })).status).to.equal(400)
+    expect((await request('/api/register', 'POST', { ...user, password: 'short' })).status).to.equal(400)
+    const registered = await request('/api/register', 'POST', user)
+    expect(registered.status).to.equal(201)
+    expect(registered.data).not.to.have.property('passwordHash')
+    expect((await request('/api/auth/register', 'POST', user)).status).to.equal(409)
+    expect((await request('/api/login', 'POST', { email: user.email, password: 'wrong-password' })).status).to.equal(401)
+    const login = await request('/api/auth/login', 'POST', { email: 'student@example.com', password: user.password })
+    expect(login.status).to.equal(200)
+    expect(login.data.username).to.equal('Student')
+    expect((await request('/api/login', 'POST', { email: user.email })).status).to.equal(400)
+  })
+
+  it('receives chat forms without claiming AI is connected', async () => {
     expect((await request('/api/chat', 'POST', { message: 'make it green' })).data.reply).to.include('not connected')
     expect((await request('/api/chat', 'POST', { message: '' })).status).to.equal(400)
   })

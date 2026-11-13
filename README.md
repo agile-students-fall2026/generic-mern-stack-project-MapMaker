@@ -30,6 +30,35 @@ Directions for how to contribute to this project
 
 ## Setup and Testing
 
- These instructions will be updated as initial app development progresses. 
+Use Node.js 20.19+ or 22.12+ (or newer). Run these commands in two terminals:
 
+**Backend (Express):**
+
+```sh
+cd back-end
+npm install
+npm start
+```
+
+**Frontend (React):**
+
+```sh
+cd front-end
+npm install
+npm run dev
+```
+
+Open the address shown by Vite (normally `http://localhost:5173`). Vite forwards `/api` requests to Express on port 3001. You can also run `npm run build` in `front-end` and open `http://localhost:3001` to view the production build served by Express.
+
+Registration and login use Express routes `/api/register` and `/api/login`. Maps, historical map searches, and chat also use `/api` routes. The Sprint 2 server stores users and maps in memory, so they disappear on restart. Passwords are hashed, but there are no login sessions or database yet. Chat returns a mock response; historical searches use the public Wikimedia Commons API.
+
+**Run backend tests and coverage:**
+
+```sh
+cd back-end
+npm test
+npm run coverage
+```
+
+Mocha, Chai and c8 are used for testing. Never commit passwords, `.env` files or API keys.
 

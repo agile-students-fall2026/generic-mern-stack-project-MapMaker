@@ -12,12 +12,14 @@ import api from './api'
 import EditorProvider from './map-editor/EditorProvider'
 import { StylePage, EditTextPage, SourcesPage } from './map-editor/EditorScreens'
 
+
 function AuthPage({ isRegister }) {
   const navigate = useNavigate()
   const [error, setError] = useState('')
 
   async function handleSubmit(event) {
     event.preventDefault()
+    setError('')
     try {
       await api('/auth/' + (isRegister ? 'register' : 'login'), {
         method: 'POST', body: Object.fromEntries(new FormData(event.currentTarget)),
@@ -30,8 +32,13 @@ function AuthPage({ isRegister }) {
     <div className="page">
       <div className="form-box">
         <h1>MapMaker</h1>
-        <p className="tagline">Create, customize, and share your maps.</p>
+
+        <p className="tagline">
+          Create, customize, and share your maps.
+        </p>
+
         <h2>{isRegister ? 'Create an Account' : 'Welcome Back!'}</h2>
+
         <p className="description">
           {isRegister
             ? 'Get started by creating your account.'
@@ -53,14 +60,14 @@ function AuthPage({ isRegister }) {
 
           <div>
             <label htmlFor="password">Password</label>
-            <input id="password" name="password" type="password" placeholder="Enter your password" required />
+            <input id="password" name="password" type="password" placeholder="Enter your password" minLength={8} required />
           </div>
 
           <button type="submit">
             {isRegister ? 'Register' : 'Sign In'}
           </button>
         </form>
-        {error && <p role="alert">{error}</p>}
+        {error && <p className="auth-error" role="alert">{error}</p>}
 
         <p>
           {isRegister
@@ -68,16 +75,17 @@ function AuthPage({ isRegister }) {
             : "Don't have an account?"}
         </p>
 
-        <Link className="switch-button" to={isRegister ? '/login' : '/register'}>
+        <Link
+          className="switch-button"
+          to={isRegister ? '/login' : '/register'}
+        >
           {isRegister ? 'Sign In' : 'Register'}
         </Link>
-
-        <p><Link to="/">Back to Home</Link></p>
-        <p>Frontend demo only. No account is created or verified.</p>
       </div>
     </div>
   )
 }
+
 
 function MapRoutes({ maps, createMap, chooseMap, renameMap }) {
   const location = useLocation()
@@ -93,7 +101,7 @@ function MapRoutes({ maps, createMap, chooseMap, renameMap }) {
         <Route path="/search" element={<MapSearch onChooseMap={chooseMap} onCreateMap={createMap} />} />
         <Route path="/menu" element={<Menu />} />
         <Route path="/MyMaps" element={<MyMaps maps={maps} onCreateMap={createMap} />} />
-        <Route path="/chat" element={<AiChat />} />        
+        <Route path="/chat" element={<AiChat />} />
         <Route path="/Map-Editor" element={<MapEditor onRenameMap={renameMap} />} />
         <Route path="/style" element={<StylePage />} />
         <Route path="/edit-text" element={<EditTextPage onRenameMap={renameMap} />} />

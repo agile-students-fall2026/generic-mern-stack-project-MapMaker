@@ -2,6 +2,7 @@ import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { searchMaps, getDisplayImage } from './mapCatalog.js'
+import addAuthRoutes from './auth.js'
 
 const dist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../front-end/dist')
 
@@ -12,7 +13,8 @@ export function createApp() {
 
   app.use(express.json({ limit: '100kb' }))
 
-  app.get('/api/health', (req, res) => res.json({ ok: true }))
+  app.get('/api/health', (req, res) => res.json({ ok: true, message: 'MapMaker backend is running' }))
+  addAuthRoutes(app)
   app.get('/api/maps', (req, res) => res.json(maps))
 
   app.post('/api/maps', (req, res) => {
@@ -64,12 +66,6 @@ export function createApp() {
     const message = String(req.body?.message || '').trim()
     if (!message) return res.status(400).json({ error: 'Enter a message.' })
     res.json({ reply: `Demo response: received "${message.slice(0, 180)}". AI is not connected yet.` })
-  })
-
-  app.post('/api/auth/:action', (req, res) => {
-    if (!['login', 'register'].includes(req.params.action)) return res.status(404).json({ error: 'Not found.' })
-    if (!req.body?.email || !req.body?.password) return res.status(400).json({ error: 'Email and password required.' })
-    res.json({ message: 'Demo only: your form was received, but no account was created or verified.' })
   })
 
   app.use('/api', (req, res) => res.status(404).json({ error: 'API route not found.' }))

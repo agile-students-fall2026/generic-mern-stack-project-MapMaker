@@ -11,20 +11,60 @@ import MapSearch from './MapSearch'
 import EditorProvider from './map-editor/EditorProvider'
 import { StylePage, EditTextPage, SourcesPage } from './map-editor/EditorScreens'
 
+
 function AuthPage({ isRegister }) {
   const navigate = useNavigate()
+  const [error, setError] = useState('')
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
-    navigate('/home')
+    setError('')
+
+    const form = new FormData(event.currentTarget)
+
+    const data = {
+      email: form.get('email'),
+      password: form.get('password')
+    }
+
+    if (isRegister) {
+      data.username = form.get('username')
+    }
+
+    try {
+      const response = await fetch(
+        'http://localhost:4000/api/' + (isRegister ? 'register' : 'login'),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        }
+      )
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        setError(result.message)
+        return
+      }
+
+      navigate('/home')
+    } catch {
+      setError('Could not connect to the backend server.')
+    }
   }
 
   return (
     <div className="page">
       <div className="form-box">
         <h1>MapMaker</h1>
-        <p className="tagline">Create, customize, and share your maps.</p>
+
+        <p className="tagline">
+          Create, customize, and share your maps.
+        </p>
+
         <h2>{isRegister ? 'Create an Account' : 'Welcome Back!'}</h2>
+
         <p className="description">
           {isRegister
             ? 'Get started by creating your account.'
@@ -35,18 +75,37 @@ function AuthPage({ isRegister }) {
           {isRegister && (
             <div>
               <label htmlFor="username">Username</label>
-              <input id="username" type="text" placeholder="Enter your username" required />
+              <input
+                id="username"
+                name="username"
+                type="text"
+                placeholder="Enter your username"
+                required
+              />
             </div>
           )}
 
           <div>
             <label htmlFor="email">Email</label>
-            <input id="email" type="email" placeholder="Enter your email" required />
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="Enter your email"
+              required
+            />
           </div>
 
           <div>
             <label htmlFor="password">Password</label>
-            <input id="password" type="password" placeholder="Enter your password" required />
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Enter your password"
+              minLength={8}
+              required
+            />
           </div>
 
           <button type="submit">
@@ -54,22 +113,25 @@ function AuthPage({ isRegister }) {
           </button>
         </form>
 
+        {error && <p className="auth-error">{error}</p>}
+
         <p>
           {isRegister
             ? 'Already have an account?'
             : "Don't have an account?"}
         </p>
 
-        <Link className="switch-button" to={isRegister ? '/login' : '/register'}>
+        <Link
+          className="switch-button"
+          to={isRegister ? '/login' : '/register'}
+        >
           {isRegister ? 'Sign In' : 'Register'}
         </Link>
-
-        <p><Link to="/">Back to Home</Link></p>
-        <p>Frontend demo only. No account is created or verified.</p>
       </div>
     </div>
   )
 }
+
 
 function MapRoutes({ maps, createMap, chooseMap, renameMap }) {
   const location = useLocation()
@@ -85,7 +147,7 @@ function MapRoutes({ maps, createMap, chooseMap, renameMap }) {
         <Route path="/search" element={<MapSearch onChooseMap={chooseMap} onCreateMap={createMap} />} />
         <Route path="/menu" element={<Menu />} />
         <Route path="/MyMaps" element={<MyMaps maps={maps} onCreateMap={createMap} />} />
-        <Route path="/chat" element={<AiChat />} />        
+        <Route path="/chat" element={<AiChat />} />
         <Route path="/Map-Editor" element={<MapEditor onRenameMap={renameMap} />} />
         <Route path="/style" element={<StylePage />} />
         <Route path="/edit-text" element={<EditTextPage onRenameMap={renameMap} />} />

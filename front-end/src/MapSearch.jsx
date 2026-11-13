@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { cleanMapQuery, getDisplayImage, searchMaps } from './map-editor/mapCatalog'
 import './MapSearch.css'
 
@@ -7,6 +7,7 @@ const EXAMPLES = ['Roman Empire 117', 'Europe 1914', 'Japan Edo period', 'New Yo
 
 export default function MapSearch({ onChooseMap, onCreateMap }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [params, setParams] = useSearchParams()
   const query = params.get('q') || ''
   const [input, setInput] = useState(query)
@@ -67,14 +68,30 @@ export default function MapSearch({ onChooseMap, onCreateMap }) {
 
   async function choose(result) {
     setSelecting(result.pageId)
-    const url = await getDisplayImage(result)
-    const map = onChooseMap({ ...result, url })
-    navigate('/Map-Editor', { state: { map } })
+    try {
+      const url = await getDisplayImage(result)
+      const map = await onChooseMap({ ...result, url })
+      navigate('/Map-Editor', { state: { map } })
+    } catch (err) {
+      setError(err.message)
+      setSelecting(null)
+    }
+  }
+
+  async function blankMap() {
+    try {
+      const map = await onCreateMap('World map')
+      navigate('/Map-Editor', { state: { map } })
+    } catch (err) { setError(err.message) }
   }
 
   return (
     <main className="map-search">
-      <header><h2>Logo</h2><button onClick={() => navigate('/menu')}>Menu</button></header>
+      <button onClick={() => navigate('/menu', {
+        state: { backgroundLocation: location }
+      })}>
+        Menu
+      </button>
       <h1>Find a map</h1>
       <form className="map-search-form" onSubmit={submit}>
         <input aria-label="Search maps" value={input} placeholder="e.g. Europe in 1914" onChange={(event) => setInput(event.target.value)} required />
@@ -90,7 +107,7 @@ export default function MapSearch({ onChooseMap, onCreateMap }) {
         ))}
       </div>
       <p className="map-search-hint">Choose an existing map, or start with an editable world map.</p>
-      <button onClick={() => navigate('/Map-Editor', { state: { map: onCreateMap('World map') } })}>Start with editable world map</button>
+      <button onClick={blankMap}>Start with editable world map</button>
 
       {loading && <p role="status">Searching maps...</p>}
       {error && <p role="alert">{error}</p>}

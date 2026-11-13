@@ -1,26 +1,77 @@
+
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import './Home.css'
 
-function Home(){
-    const navigate=useNavigate()
-    const [description, setDescription] = useState("")
+const EXAMPLES = [
+  "Countries That Drive On The Left",
+  "Members of the EU in 1995"
+]
 
-    function createMap(){
-        navigate("/search?q=" + encodeURIComponent(description.trim() || "world map"))
-    }
+function Home({ onCreateMap }) {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [description, setDescription] = useState("")
+  const [error, setError] = useState('')
 
-    return(
-        <div className="home">
-            <header>
-                <h2>Logo</h2>
-                <button onClick={()=>navigate("/menu")}>Menu</button>
-            </header>
+  function createMap(event) {
+    event.preventDefault()
+    navigate('/search?q=' + encodeURIComponent(description.trim() || 'world'))
+  }
 
-            <h1>Describe a map.</h1>
-            <textarea placeholder="Make me a map of..." value={description} onChange={(event)=>setDescription(event.target.value)} />
-            <button onClick={createMap}>Generate map</button>
-            <button onClick={()=>navigate("/MyMaps")}>My maps</button>
-        </div>
-    )
+  async function blankMap() {
+    try {
+      const map = await onCreateMap('Untitled Map')
+      navigate('/Map-Editor', { state: { map } })
+    } catch (err) { setError(err.message) }
+  }
+
+  return (
+    <div className="home">
+      <header>
+        <img
+          className="logo"
+          src="https://cdn-icons-png.flaticon.com/512/4746/4746231.png"
+          alt="MapMaker logo"
+        />
+        <button onClick={() => navigate("/menu", {
+          state: { backgroundLocation: location }
+        })}>
+          Menu
+        </button>
+      </header>
+
+      <h1>Describe Your Map</h1>
+
+      <form className="prompt-box" onSubmit={createMap}>
+        <textarea
+          placeholder="Make me a map of..."
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+        />
+        <button className="generate-button" type="submit">
+          Generate
+        </button>
+      </form>
+
+      <button className="blank-button" onClick={blankMap}>
+        Start From A Blank Map
+      </button>
+      {error && <p role="alert">{error}</p>}
+
+      <h3>Examples</h3>
+
+      {EXAMPLES.map((example) => (
+        <button
+          className="example"
+          key={example}
+          onClick={() => setDescription(example)}
+        >
+          {example}
+        </button>
+      ))}
+    </div>
+  )
 }
+
 export default Home

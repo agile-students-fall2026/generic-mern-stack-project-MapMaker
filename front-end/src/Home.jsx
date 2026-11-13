@@ -12,15 +12,18 @@ function Home({ onCreateMap }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [description, setDescription] = useState("")
+  const [error, setError] = useState('')
 
-  function createMap() {
-    const map = onCreateMap(description.trim() || "Untitled Map")
-    navigate("/Map-Editor", { state: { map } })
+  function createMap(event) {
+    event.preventDefault()
+    navigate('/search?q=' + encodeURIComponent(description.trim() || 'world'))
   }
 
-  function blankMap() {
-    const map = onCreateMap("Untitled Map")
-    navigate("/Map-Editor", { state: { map } })
+  async function blankMap() {
+    try {
+      const map = await onCreateMap('Untitled Map')
+      navigate('/Map-Editor', { state: { map } })
+    } catch (err) { setError(err.message) }
   }
 
   return (
@@ -40,20 +43,21 @@ function Home({ onCreateMap }) {
 
       <h1>Describe Your Map</h1>
 
-      <div className="prompt-box">
+      <form className="prompt-box" onSubmit={createMap}>
         <textarea
           placeholder="Make me a map of..."
           value={description}
           onChange={(event) => setDescription(event.target.value)}
         />
-        <button className="generate-button" onClick={createMap}>
+        <button className="generate-button" type="submit">
           Generate
         </button>
-      </div>
+      </form>
 
       <button className="blank-button" onClick={blankMap}>
         Start From A Blank Map
       </button>
+      {error && <p role="alert">{error}</p>}
 
       <h3>Examples</h3>
 

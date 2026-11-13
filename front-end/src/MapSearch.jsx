@@ -68,9 +68,21 @@ export default function MapSearch({ onChooseMap, onCreateMap }) {
 
   async function choose(result) {
     setSelecting(result.pageId)
-    const url = await getDisplayImage(result)
-    const map = onChooseMap({ ...result, url })
-    navigate('/Map-Editor', { state: { map } })
+    try {
+      const url = await getDisplayImage(result)
+      const map = await onChooseMap({ ...result, url })
+      navigate('/Map-Editor', { state: { map } })
+    } catch (err) {
+      setError(err.message)
+      setSelecting(null)
+    }
+  }
+
+  async function blankMap() {
+    try {
+      const map = await onCreateMap('World map')
+      navigate('/Map-Editor', { state: { map } })
+    } catch (err) { setError(err.message) }
   }
 
   return (
@@ -95,7 +107,7 @@ export default function MapSearch({ onChooseMap, onCreateMap }) {
         ))}
       </div>
       <p className="map-search-hint">Choose an existing map, or start with an editable world map.</p>
-      <button onClick={() => navigate('/Map-Editor', { state: { map: onCreateMap('World map') } })}>Start with editable world map</button>
+      <button onClick={blankMap}>Start with editable world map</button>
 
       {loading && <p role="status">Searching maps...</p>}
       {error && <p role="alert">{error}</p>}

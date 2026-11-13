@@ -8,6 +8,7 @@ import Home from './Home'
 import Menu from './Menu'
 import AiChat from './AiChat'
 import MapSearch from './MapSearch'
+import api from './api'
 import EditorProvider from './map-editor/EditorProvider'
 import { StylePage, EditTextPage, SourcesPage } from './map-editor/EditorScreens'
 
@@ -19,39 +20,12 @@ function AuthPage({ isRegister }) {
   async function handleSubmit(event) {
     event.preventDefault()
     setError('')
-
-    const form = new FormData(event.currentTarget)
-
-    const data = {
-      email: form.get('email'),
-      password: form.get('password')
-    }
-
-    if (isRegister) {
-      data.username = form.get('username')
-    }
-
     try {
-      const response = await fetch(
-        'http://localhost:4000/api/' + (isRegister ? 'register' : 'login'),
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        }
-      )
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        setError(result.message)
-        return
-      }
-
+      await api('/auth/' + (isRegister ? 'register' : 'login'), {
+        method: 'POST', body: Object.fromEntries(new FormData(event.currentTarget)),
+      })
       navigate('/home')
-    } catch {
-      setError('Could not connect to the backend server.')
-    }
+    } catch (err) { setError(err.message) }
   }
 
   return (
@@ -75,45 +49,25 @@ function AuthPage({ isRegister }) {
           {isRegister && (
             <div>
               <label htmlFor="username">Username</label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                placeholder="Enter your username"
-                required
-              />
+              <input id="username" name="username" type="text" placeholder="Enter your username" required />
             </div>
           )}
 
           <div>
             <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              required
-            />
+            <input id="email" name="email" type="email" placeholder="Enter your email" required />
           </div>
 
           <div>
             <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="Enter your password"
-              minLength={8}
-              required
-            />
+            <input id="password" name="password" type="password" placeholder="Enter your password" minLength={8} required />
           </div>
 
           <button type="submit">
             {isRegister ? 'Register' : 'Sign In'}
           </button>
         </form>
-
-        {error && <p className="auth-error">{error}</p>}
+        {error && <p className="auth-error" role="alert">{error}</p>}
 
         <p>
           {isRegister
@@ -165,46 +119,28 @@ function MapRoutes({ maps, createMap, chooseMap, renameMap }) {
 }
 
 function App() {
-  const [maps, setMaps] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('mapmaker-maps'))
-      return Array.isArray(saved)
-        ? saved.filter((map) => !(map.number <= 3 && map.name === 'Map Title' && !map.asset))
-        : []
-    } catch {
-      return []
-    }
-  })
+  const [maps, setMaps] = useState([])
 
   useEffect(() => {
-    try {
-      localStorage.setItem('mapmaker-maps', JSON.stringify(maps))
-    } catch {
-      return
-    }
-  }, [maps])
+    api('/maps').then(setMaps).catch(console.error)
+  }, [])
 
-  function createMap(name) {
-    const map = { number: Date.now(), name: name.trim() || 'Untitled Map' }
+  async function createMap(name) {
+    const map = await api('/maps', { method: 'POST', body: { name: name.trim() || 'Untitled Map' } })
     setMaps((existing) => [map, ...existing])
     return map
   }
 
-  function chooseMap(asset) {
-    const map = {
-      number: Date.now(),
-      name: asset.title,
-      image: asset.thumbnail,
-      asset
-    }
+  async function chooseMap(asset) {
+    const map = await api('/maps', { method: 'POST', body: { name: asset.title, asset } })
     setMaps((existing) => [map, ...existing])
     return map
   }
 
-  function renameMap(number, name) {
-    setMaps((existing) =>
-      existing.map((map) => map.number === number ? { ...map, name } : map)
-    )
+  async function renameMap(number, name) {
+    if (!Number.isSafeInteger(number)) return
+    await api('/maps/' + number, { method: 'POST', body: { title: name } })
+    setMaps((existing) => existing.map((map) => map.number === number ? { ...map, name } : map))
   }
 
   return (

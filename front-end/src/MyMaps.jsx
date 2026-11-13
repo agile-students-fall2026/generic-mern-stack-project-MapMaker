@@ -5,12 +5,15 @@ import './MyMaps.css'
 
 function MyMaps({ maps, onCreateMap }){
     const [newMap,setNewMap]=useState("")
-    function createNewMap(event){
+    const [error,setError]=useState("")
+    async function createNewMap(event){
         event.preventDefault()
         if (newMap.trim()==="") return
-        const map = onCreateMap(newMap)
-        setNewMap("")
-        navigate("/Map-Editor", { state: { map:map } })
+        try {
+            const map = await onCreateMap(newMap)
+            setNewMap("")
+            navigate("/Map-Editor", { state: { map:map } })
+        } catch (err) { setError(err.message) }
         
 
 
@@ -33,6 +36,7 @@ function MyMaps({ maps, onCreateMap }){
             </header>
             
         <h1>My Maps</h1>
+        {maps.length === 0 && <p>No maps yet. Create one below or browse historical maps.</p>}
          <div className="map-list">
             {maps.map((map)=>(
             <button type="button"
@@ -63,6 +67,7 @@ function MyMaps({ maps, onCreateMap }){
             Send
             </button>
         </form>
+        {error && <p role="alert">{error}</p>}
         <button onClick={() => navigate('/search')}>Browse historical maps</button>
       
 

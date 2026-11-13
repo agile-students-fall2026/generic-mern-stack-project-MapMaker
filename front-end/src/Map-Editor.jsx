@@ -5,6 +5,7 @@ import MapImage from './map-editor/MapImage'
 import { EditorHeader } from './map-editor/EditorScreens'
 import { STYLES, IMAGE_STYLES } from './map-editor/editorData'
 import { useEditor } from './map-editor/editorContext'
+import api from './api'
 import './Map-Editor.css'
 
 async function exportPng(svg, map, colors, rasterImage) {
@@ -82,9 +83,10 @@ export default function MapEditor({ onRenameMap }) {
     updateMap({ selectedCountries: selected.includes(id) ? selected.filter((item) => item !== id) : [...selected, id] })
   }
 
-  function submitInstruction(event) {
+  async function submitInstruction(event) {
     event.preventDefault()
     const command = instruction.trim()
+    if (!command) return
     const title = command.match(/^title\s*:\s*(.+)$/i)
     const color = /green|forest/i.test(command) ? 'forest'
       : /pink|pastel|rose/i.test(command) ? 'blush'
@@ -106,8 +108,11 @@ export default function MapEditor({ onRenameMap }) {
     }
     else if (color) updateMap({ styleId: color })
     else setMessage('Try "title: My map" or "make it green".')
-    setInstruction('')
-    navigate('/chat', { state: { message: command } })
+    try {
+      const { reply } = await api('/chat', { method: 'POST', body: { message: command } })
+      setInstruction('')
+      navigate('/chat', { state: { message: command, reply } })
+    } catch (err) { setMessage(err.message) }
   }
 
   async function download() {

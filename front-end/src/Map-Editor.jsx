@@ -87,6 +87,7 @@ export default function MapEditor({ onRenameMap }) {
     event.preventDefault()
     const command = instruction.trim()
     if (!command) return
+    let handled = true
     const title = command.match(/^title\s*:\s*(.+)$/i)
     const color = /green|forest/i.test(command) ? 'forest'
       : /pink|pastel|rose/i.test(command) ? 'blush'
@@ -104,15 +105,20 @@ export default function MapEditor({ onRenameMap }) {
     else if (map.asset) {
       if (/black.and.white|grayscale/i.test(command)) updateMap({ imageStyle: 'black-white' })
       else if (/warm|sepia/i.test(command)) updateMap({ imageStyle: 'warm' })
-      else setMessage('Try "title: My map", "black and white", or "warm".')
+      else handled = false
     }
     else if (color) updateMap({ styleId: color })
-    else setMessage('Try "title: My map" or "make it green".')
+    else handled = false
+
+    setInstruction('')
     try {
       const { reply } = await api('/chat', { method: 'POST', body: { message: command } })
-      setInstruction('')
-      navigate('/chat', { state: { message: command, reply } })
-    } catch (err) { setMessage(err.message) }
+      if (handled) setMessage('Map updated.')
+      else navigate('/chat', { state: { message: command, reply } })
+    } catch (err) {
+      setInstruction((current) => current || command)
+      setMessage(err.message)
+    }
   }
 
   async function download() {

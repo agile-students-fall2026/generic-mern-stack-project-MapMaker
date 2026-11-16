@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import './MyMaps.css'
 
 
-function MyMaps({ maps, onCreateMap }){
+function MyMaps({ maps, onCreateMap, onDeleteMap, mapError }){
     const [newMap,setNewMap]=useState("")
     const [error,setError]=useState("")
     async function createNewMap(event){
@@ -17,6 +17,13 @@ function MyMaps({ maps, onCreateMap }){
         
 
 
+    }
+
+    async function deleteMap(map) {
+        if (!window.confirm(`Delete "${map.name}"?`)) return
+        try {
+            await onDeleteMap(map.number)
+        } catch (err) { setError(err.message) }
     }
 
 
@@ -36,12 +43,13 @@ function MyMaps({ maps, onCreateMap }){
             </header>
             
         <h1>My Maps</h1>
-        {maps.length === 0 && <p>No maps yet. Create one below or browse historical maps.</p>}
+        {mapError && <p role="alert">Could not load maps: {mapError}</p>}
+        {maps.length === 0 && !mapError && <p>No maps yet. Create one below or browse historical maps.</p>}
          <div className="map-list">
             {maps.map((map)=>(
+            <div className="map-item" key={map.number}>
             <button type="button"
                 className="map-card"
-                key={map.number}
                 onClick={() => navigate("/Map-Editor", { state: {  map:map } })}
             > 
                 <div className="map-picture">
@@ -53,6 +61,8 @@ function MyMaps({ maps, onCreateMap }){
                 </div>
                 
                 </button>
+                <button type="button" className="delete-map" onClick={() => deleteMap(map)}>Delete</button>
+            </div>
             ))}
             
         </div>

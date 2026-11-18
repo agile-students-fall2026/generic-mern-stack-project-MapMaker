@@ -1,7 +1,7 @@
 import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { searchMaps, getDisplayImage } from './mapCatalog.js'
+import { searchMaps } from './mapCatalog.js'
 import addAuthRoutes from './auth.js'
 
 const dist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../front-end/dist')
@@ -20,14 +20,17 @@ export function createApp() {
   app.post('/api/maps', (req, res) => {
     const name = String(req.body?.name || '').trim().slice(0, 80)
     if (!name) return res.status(400).json({ error: 'Enter a map name.' })
+    const selected = req.body?.selectedCountries || []
+    if (!Array.isArray(selected) || selected.some((id) => typeof id !== 'string' || !/^[A-Z]{3}$/.test(id))) {
+      return res.status(400).json({ error: 'Invalid country selection.' })
+    }
+    const styleId = ['atlas', 'blush', 'forest', 'slate'].includes(req.body?.styleId) ? req.body.styleId : 'atlas'
     const number = nextId++
     const map = { number, id: String(number), name, title: name,
-      asset: req.body.asset || null, image: req.body.asset?.thumbnail || null }
+      asset: null, selectedCountries: selected, styleId }
     maps.unshift(map)
     res.status(201).json(map)
   })
-  
-
   app.get('/api/maps/:id', (req, res) => {
     const map = maps.find((item) => item.id === req.params.id)
     return map ? res.json(map) : res.status(404).json({ error: 'Map not found.' })
@@ -62,31 +65,22 @@ export function createApp() {
   app.patch('/api/maps/:id', updateMap)
   app.post('/api/maps/:id', updateMap)
 
-
   app.post('/api/maps/:id/share', (req, res) => {
-  const map = maps.find((item) => item.id === req.params.id)
-  if (!map) return res.status(404).json({ error: 'Map not found.' })
-  const email = String(req.body?.email || '').trim().toLowerCase()
-  if (!email) return res.status(400).json({ error: 'Enter an email.' })
-  if (!map.collaborators) map.collaborators = []
-  if (!map.collaborators.includes(email)) map.collaborators.push(email)
-  res.json(map)
-})
-
-  app.post('/api/search', async (req, res) => {
-    const query = req.body?.query
-    if (typeof query !== 'string' || !query.trim() || query.length > 140) {
-      return res.status(400).json({ error: 'Enter a search of up to 140 characters.' })
-    }
-    res.json(await searchMaps(query, req.body?.cursor || null))
+    const map = maps.find((item) => item.id === req.params.id)
+    if (!map) return res.status(404).json({ error: 'Map not found.' })
+    const email = String(req.body?.email || '').trim().toLowerCase()
+    if (!email) return res.status(400).json({ error: 'Enter an email.' })
+    if (!map.collaborators) map.collaborators = []
+    if (!map.collaborators.includes(email)) map.collaborators.push(email)
+    res.json(map)
   })
 
-  app.post('/api/map-image', async (req, res) => {
-    const pageId = req.body?.pageId
-    if (!Number.isSafeInteger(pageId) || pageId <= 0) {
-      return res.status(400).json({ error: 'Invalid map image.' })
+  app.post('/api/search', (req, res) => {
+    const query = req.body?.query
+    if (typeof query !== 'string' || query.length > 140) {
+      return res.status(400).json({ error: 'Enter a search of up to 140 characters.' })
     }
-    res.json({ url: await getDisplayImage({ pageId }) })
+    res.json(searchMaps(query))
   })
 
   app.post('/api/chat', (req, res) => {

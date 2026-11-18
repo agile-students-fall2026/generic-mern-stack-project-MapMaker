@@ -7,14 +7,6 @@ export function cleanMapQuery(text) {
     .slice(0, 140)
 }
 
-export const searchMaps = (query, cursor, signal) => api('/search', {
-  method: 'POST', body: { query, cursor }, signal,
+export const searchMaps = (query, signal) => api('/search', {
+  method: 'POST', body: { query }, signal,
 })
-
-export async function getDisplayImage(map) {
-  try {
-    return (await api('/map-image', { method: 'POST', body: { pageId: map.pageId } })).url
-  } catch {
-    return map.thumbnail
-  }
-}

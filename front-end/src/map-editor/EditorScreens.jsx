@@ -128,7 +128,7 @@ export function SourcesPage() {
         <a href={map.asset.pageUrl} target="_blank" rel="noopener noreferrer">Original file and full attribution</a>
       </> : <>
         <h3>Natural Earth</h3>
-        <p>World country boundaries from the 1:110m Admin 0 Countries dataset (public domain). Highlighted countries are chosen by the user.</p>
+        <p>World country boundaries from the 1:110m Admin 0 Countries dataset (public domain). Highlighted countries are sample selections or were chosen by the user.</p>
         <a href="https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-countries/"
           target="_blank" rel="noopener noreferrer">View original map data</a>
       </>}

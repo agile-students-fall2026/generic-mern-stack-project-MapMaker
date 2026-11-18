@@ -4,8 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import './Home.css'
 
 const EXAMPLES = [
-  "Europe 1914",
-  "Roman Empire 117"
+  "Europe",
+  "North America"
 ]
 
 function Home({ onCreateMap }) {
@@ -16,7 +16,7 @@ function Home({ onCreateMap }) {
 
   function createMap(event) {
     event.preventDefault()
-    navigate('/search?q=' + encodeURIComponent(description.trim() || 'world'))
+    navigate('/search?q=' + encodeURIComponent(description.trim()))
   }
 
   async function blankMap() {
@@ -45,12 +45,12 @@ function Home({ onCreateMap }) {
 
       <form className="prompt-box" onSubmit={createMap}>
         <textarea
-          placeholder="Make me a map of..."
+          placeholder="Search sample maps..."
           value={description}
           onChange={(event) => setDescription(event.target.value)}
         />
         <button className="generate-button" type="submit">
-          Generate
+          Find Map
         </button>
       </form>
 

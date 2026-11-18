@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { cleanMapQuery, getDisplayImage, searchMaps } from './map-editor/mapCatalog'
+import { cleanMapQuery, searchMaps } from './map-editor/mapCatalog'
+import MapPreview from './map-editor/MapPreview'
 import './MapSearch.css'
 
-const EXAMPLES = ['Roman Empire 117', 'Europe 1914', 'Japan Edo period', 'New York 1860', 'World 1650', 'Africa 1890']
+const EXAMPLES = ['North America', 'South America', 'Europe', 'Asia', 'Africa', 'Oceania']
 
 export default function MapSearch({ onChooseMap, onCreateMap }) {
   const navigate = useNavigate()
@@ -12,24 +13,21 @@ export default function MapSearch({ onChooseMap, onCreateMap }) {
   const query = params.get('q') || ''
   const [input, setInput] = useState(query)
   const [results, setResults] = useState([])
-  const [next, setNext] = useState(null)
-  const [loading, setLoading] = useState(Boolean(query))
-  const [refresh, setRefresh] = useState(0)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [selecting, setSelecting] = useState(null)
+  const [selecting, setSelecting] = useState(false)
+  const [refresh, setRefresh] = useState(0)
 
   useEffect(() => {
-    if (!query.trim()) return
     const controller = new AbortController()
     Promise.resolve().then(() => {
-      if (controller.signal.aborted) return null
+      if (controller.signal.aborted) return
       setInput(query)
       setLoading(true)
-      return searchMaps(query, null, controller.signal)
+      return searchMaps(query, controller.signal)
     }).then((data) => {
-      if (!data) return
+      if (!data || controller.signal.aborted) return
       setResults(data.results)
-      setNext(data.next)
       setError('')
     }).catch((err) => {
       if (!controller.signal.aborted) setError(err.message)
@@ -39,95 +37,72 @@ export default function MapSearch({ onChooseMap, onCreateMap }) {
     return () => controller.abort()
   }, [query, refresh])
 
-  function submit(event) {
+  function search(event) {
     event.preventDefault()
     const value = cleanMapQuery(input)
-    if (!value) return
-    if (value === query) { setRefresh((n) => n + 1); return }
-    setResults([])
-    setNext(null)
-    setError('')
-    setLoading(true)
-    setParams({ q: value })
+    if (value === query) setRefresh((n) => n + 1)
+    else setParams(value ? { q: value } : {})
   }
 
-  async function more() {
-    if (!next || loading) return
-    setLoading(true)
+  async function openMap(template) {
+    setSelecting(true)
     try {
-      const data = await searchMaps(query, next)
-      setResults((old) => [...old, ...data.results.filter((item) => !old.some((o) => o.pageId === item.pageId))])
-      setNext(data.next)
-      setError('')
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function choose(result) {
-    setSelecting(result.pageId)
-    try {
-      const url = await getDisplayImage(result)
-      const map = await onChooseMap({ ...result, url })
+      const map = await onChooseMap(template)
       navigate('/Map-Editor', { state: { map } })
     } catch (err) {
       setError(err.message)
-      setSelecting(null)
+      setSelecting(false)
     }
   }
 
   async function blankMap() {
+    setSelecting(true)
     try {
-      const map = await onCreateMap('World map')
+      const map = await onCreateMap('Untitled Map')
       navigate('/Map-Editor', { state: { map } })
-    } catch (err) { setError(err.message) }
+    } catch (err) {
+      setError(err.message)
+      setSelecting(false)
+    }
   }
 
   return (
     <main className="map-search">
-      <button onClick={() => navigate('/menu', {
-        state: { backgroundLocation: location }
-      })}>
-        Menu
-      </button>
-      <h1>Find a map</h1>
-      <form className="map-search-form" onSubmit={submit}>
-        <input aria-label="Search maps" value={input} placeholder="e.g. Europe in 1914" onChange={(event) => setInput(event.target.value)} required />
+      <button onClick={() => navigate('/menu', { state: { backgroundLocation: location } })}>Menu</button>
+      <h1>Choose a map</h1>
+      <form className="map-search-form" onSubmit={search}>
+        <input aria-label="Search maps" value={input} placeholder="Search sample maps" onChange={(event) => setInput(event.target.value)} />
         <button type="submit">Search</button>
       </form>
       <div className="map-search-examples">
         {EXAMPLES.map((example) => (
           <button key={example} onClick={() => {
             setInput(example)
-            if (example === query) return
-            setResults([]); setNext(null); setError(''); setLoading(true); setParams({ q: example })
+            if (query === example) setRefresh((n) => n + 1)
+            else setParams({ q: example })
           }}>{example}</button>
         ))}
       </div>
-      <p className="map-search-hint">Choose an existing map, or start with an editable world map.</p>
-      <button onClick={blankMap}>Start with editable world map</button>
+      <p className="map-search-hint">Choose an editable sample map, or start from a blank world map.</p>
+      <button disabled={selecting} onClick={blankMap}>Start with blank world map</button>
 
-      {loading && <p role="status">Searching maps...</p>}
+      {loading && <p role="status">Loading maps...</p>}
       {error && <p role="alert">{error}</p>}
-      {!loading && query && !error && !results.length && <p>No maps found. Try a broader place, time period, or topic.</p>}
-
+      {!loading && !error && !results.length && <p>No sample maps match. Try a region above or start with a blank map.</p>}
       <div className="map-search-results">
-        {results.map((result) => (
-          <article className="map-search-card" key={result.pageId}>
-            <img src={result.thumbnail} alt={result.title} loading="lazy" />
-            <h2>{result.title}</h2>
+        {results.map((template) => (
+          <article className="map-search-card" key={template.id}>
+            <div className="map-search-preview">
+              <MapPreview styleId={template.styleId} selectedCountries={template.selectedCountries} />
+            </div>
+            <h2>{template.title}</h2>
+            <p>{template.description}</p>
             <div className="map-search-actions">
-              <a href={result.pageUrl} target="_blank" rel="noopener noreferrer">Source</a>
-              <button disabled={selecting !== null} onClick={() => choose(result)}>
-                {selecting === result.pageId ? 'Opening...' : 'Use this map'}
-              </button>
+              <button disabled={selecting} onClick={() => openMap(template)}>Use this map</button>
             </div>
           </article>
         ))}
       </div>
-      {next && <button className="map-search-more" disabled={loading} onClick={more}>Load more maps</button>}
     </main>
   )
 }

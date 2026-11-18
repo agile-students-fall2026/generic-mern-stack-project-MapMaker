@@ -21,7 +21,7 @@ describe('MapMaker Express API', () => {
       method, headers: { 'Content-Type': 'application/json' },
       body: body && JSON.stringify(body),
     })
-    return { status: response.status, data: await response.json() }
+    return { status: response.status, data: response.status === 204 ? null : await response.json() }
   }
 
   it('reports the API is healthy', async () => {
@@ -101,5 +101,13 @@ describe('MapMaker Express API', () => {
     expect(result.data.results.map((item) => item.title)).to.deep.equal(['New York Map'])
     expect((await request('/api/map-image', 'POST', { pageId: 123 })).data.url).to.include('map-large.png')
     globalThis.fetch = originalFetch
+  })
+
+  it('deletes a saved map', async () => {
+    const deleted = await request('/api/maps/' + mapId, 'DELETE')
+    expect(deleted.status).to.equal(204)
+    expect((await request('/api/maps')).data).to.deep.equal([])
+    expect((await request('/api/maps/' + mapId)).status).to.equal(404)
+    expect((await request('/api/maps/' + mapId, 'DELETE')).status).to.equal(404)
   })
 })

@@ -4,7 +4,7 @@ export default async function api(path, options = {}) {
     headers: { 'Content-Type': 'application/json' },
     body: options.body ? JSON.stringify(options.body) : undefined,
   })
-  const data = await response.json()
-  if (!response.ok) throw new Error(data.error || data.message || 'Request failed.')
+  const data = response.status === 204 ? null : await response.json()
+  if (!response.ok) throw new Error(data?.error || data?.message || 'Request failed.')
   return data
 }

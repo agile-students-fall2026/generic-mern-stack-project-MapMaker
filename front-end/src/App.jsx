@@ -87,7 +87,7 @@ function AuthPage({ isRegister }) {
 }
 
 
-function MapRoutes({ maps, createMap, chooseMap, renameMap }) {
+function MapRoutes({ maps, createMap, chooseMap, renameMap, deleteMap, mapError }) {
   const location = useLocation()
   const backgroundLocation = location.state?.backgroundLocation
 
@@ -100,7 +100,7 @@ function MapRoutes({ maps, createMap, chooseMap, renameMap }) {
         <Route path="/home" element={<Home onCreateMap={createMap} />} />
         <Route path="/search" element={<MapSearch onChooseMap={chooseMap} onCreateMap={createMap} />} />
         <Route path="/menu" element={<Menu />} />
-        <Route path="/MyMaps" element={<MyMaps maps={maps} onCreateMap={createMap} />} />
+        <Route path="/MyMaps" element={<MyMaps maps={maps} onCreateMap={createMap} onDeleteMap={deleteMap} mapError={mapError} />} />
         <Route path="/chat" element={<AiChat />} />
         <Route path="/Map-Editor" element={<MapEditor onRenameMap={renameMap} />} />
         <Route path="/style" element={<StylePage />} />
@@ -120,9 +120,10 @@ function MapRoutes({ maps, createMap, chooseMap, renameMap }) {
 
 function App() {
   const [maps, setMaps] = useState([])
+  const [mapError, setMapError] = useState('')
 
   useEffect(() => {
-    api('/maps').then(setMaps).catch(console.error)
+    api('/maps').then(setMaps).catch((err) => setMapError(err.message))
   }, [])
 
   async function createMap(name) {
@@ -137,10 +138,14 @@ function App() {
     return map
   }
 
-  async function renameMap(number, name) {
+  function renameMap(number, name) {
     if (!Number.isSafeInteger(number)) return
-    await api('/maps/' + number, { method: 'POST', body: { title: name } })
     setMaps((existing) => existing.map((map) => map.number === number ? { ...map, name } : map))
+  }
+
+  async function deleteMap(number) {
+    await api('/maps/' + number, { method: 'DELETE' })
+    setMaps((existing) => existing.filter((map) => map.number !== number))
   }
 
   return (
@@ -151,6 +156,8 @@ function App() {
           createMap={createMap}
           chooseMap={chooseMap}
           renameMap={renameMap}
+          deleteMap={deleteMap}
+          mapError={mapError}
         />
       </Router>
     </EditorProvider>

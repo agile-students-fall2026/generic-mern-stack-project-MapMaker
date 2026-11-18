@@ -6,7 +6,7 @@
   max-width: 650px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   background: white;
   padding: 20px;
@@ -41,7 +41,12 @@
   text-align: left; 
   min-width: 0; 
   overflow-wrap: anywhere;
+  width: 100%;
 }
+
+.my-maps .map-item { min-width: 0; }
+.my-maps .delete-map { background: none; color: #555; padding: 7px 2px; font-size: 12px; }
+.my-maps .delete-map:hover { background: none; color: #b42318; text-decoration: underline; }
 
 
 
@@ -61,7 +66,7 @@
   display: flex;
   width:100%;
   gap: 10px;
-  margin-top:auto;
+  margin-top:20px;
 
 }
 .my-maps .create-new-map input {

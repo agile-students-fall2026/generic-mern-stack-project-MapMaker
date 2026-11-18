@@ -4,8 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import './Home.css'
 
 const EXAMPLES = [
-  "Countries That Drive On The Left",
-  "Members of the EU in 1995"
+  "Europe 1914",
+  "Roman Empire 117"
 ]
 
 function Home({ onCreateMap }) {

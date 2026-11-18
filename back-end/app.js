@@ -41,6 +41,13 @@ export function createApp() {
     res.status(201).json(map)
   })
 
+  app.delete('/api/maps/:id', (req, res) => {
+    const index = maps.findIndex((map) => map.id === req.params.id)
+    if (index === -1) return res.status(404).json({ error: 'Map not found.' })
+    maps.splice(index, 1)
+    res.sendStatus(204)
+  })
+
   function updateMap(req, res) {
     const map = maps.find((item) => item.id === req.params.id)
     if (!map) return res.status(404).json({ error: 'Map not found.' })

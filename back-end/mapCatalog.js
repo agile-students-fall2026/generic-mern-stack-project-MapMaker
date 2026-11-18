@@ -21,7 +21,7 @@ function apiUrl(params) {
 
 async function request(params, signal) {
   const response = await fetch(apiUrl(params), {
-    signal,
+    signal: signal || AbortSignal.timeout(15000),
     headers: { 'Api-User-Agent': 'MapMakerStudent/0.1 (https://github.com/agile-students-fall2026/generic-mern-stack-project-MapMaker)' },
   })
   if (!response.ok) throw new Error(response.status === 429 ? 'Search is temporarily rate-limited. Try again shortly.' : 'Map search is temporarily unavailable.')

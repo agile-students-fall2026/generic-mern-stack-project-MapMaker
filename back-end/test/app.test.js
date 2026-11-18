@@ -21,7 +21,7 @@ describe('MapMaker Express API', () => {
       method, headers: { 'Content-Type': 'application/json' },
       body: body && JSON.stringify(body),
     })
-    return { status: response.status, data: await response.json() }
+    return { status: response.status, data: response.status === 204 ? null : await response.json() }
   }
 
   it('reports the API is healthy', async () => {
@@ -72,6 +72,13 @@ describe('MapMaker Express API', () => {
     expect((await request('/api/maps/does-not-exist', 'PATCH', { title: 'X' })).status).to.equal(404)
     expect((await request('/api/no-such-route')).status).to.equal(404)
   })
+  it('deletes a saved map', async () => {
+    const deleted = await request('/api/maps/' + mapId, 'DELETE')
+    expect(deleted.status).to.equal(204)
+    expect((await request('/api/maps')).data.some((map) => map.id === mapId)).to.equal(false)
+    expect((await request('/api/maps/' + mapId)).status).to.equal(404)
+    expect((await request('/api/maps/' + mapId, 'DELETE')).status).to.equal(404)
+})
 
   it('registers users and checks their passwords', async () => {
     const user = { username: 'Student', email: 'Student@Example.com', password: 'test-password' }
@@ -118,14 +125,17 @@ describe('MapMaker Express API', () => {
     expect((await request('/api/map-image', 'POST', { pageId: 123 })).data.url).to.include('map-large.png')
     globalThis.fetch = originalFetch
   })
-   it('shares maps and retrieves collaborators', async () => {
+  it('shares maps and retrieves collaborators', async () => {
     const created = await request('/api/maps', 'POST', { name: 'Shared map' })
     const id = created.data.id
     const collaborator = { email: 'collaborator@example.com' }
     const shared = await request('/api/maps/' + id + '/share', 'POST', collaborator)
     expect(shared.status).to.equal(200)
     expect((await request('/api/maps/' + id)).data.collaborators).to.include(collaborator.email)
+
+
 })
+ 
 })
 
 

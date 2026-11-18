@@ -50,6 +50,22 @@ describe('MapMaker Express API', () => {
     expect((await request('/api/maps/' + mapId, 'POST', { imageStyle: 'warm' })).data.imageStyle).to.equal('warm')
     expect((await request('/api/maps')).data).to.have.length(1)
   })
+  it('duplicates maps and preserves their properties', async () => {
+    const created = await request('/api/maps', 'POST', { name: 'Original map' })
+    const id = created.data.id
+    await request('/api/maps/' + id, 'PATCH', {
+      selectedCountries: ['CAN'], styleId: 'forest',
+    })
+    const before = await request('/api/maps')
+    const duplicated = await request('/api/maps/' + id + '/duplicate', 'POST')
+    expect(duplicated.status).to.equal(201)
+    expect(duplicated.data.id).not.to.equal(id)
+    expect(duplicated.data.selectedCountries).to.deep.equal(['CAN'])
+    expect(duplicated.data.styleId).to.equal('forest')
+    expect((await request('/api/maps')).data).to.have.length(before.data.length + 1)
+    await request('/api/maps/' + duplicated.data.id, 'PATCH', { selectedCountries: ['USA'] })
+    expect((await request('/api/maps/' + id)).data.selectedCountries).to.deep.equal(['CAN'])
+  })
 
   it('returns 404 for missing maps and routes', async () => {
     expect((await request('/api/maps/does-not-exist')).status).to.equal(404)
@@ -102,4 +118,15 @@ describe('MapMaker Express API', () => {
     expect((await request('/api/map-image', 'POST', { pageId: 123 })).data.url).to.include('map-large.png')
     globalThis.fetch = originalFetch
   })
+   it('shares maps and retrieves collaborators', async () => {
+    const created = await request('/api/maps', 'POST', { name: 'Shared map' })
+    const id = created.data.id
+    const collaborator = { email: 'collaborator@example.com' }
+    const shared = await request('/api/maps/' + id + '/share', 'POST', collaborator)
+    expect(shared.status).to.equal(200)
+    expect((await request('/api/maps/' + id)).data.collaborators).to.include(collaborator.email)
 })
+})
+
+
+

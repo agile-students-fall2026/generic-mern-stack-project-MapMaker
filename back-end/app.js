@@ -31,10 +31,17 @@ export function createApp() {
     maps.unshift(map)
     res.status(201).json(map)
   })
-
   app.get('/api/maps/:id', (req, res) => {
     const map = maps.find((item) => item.id === req.params.id)
     return map ? res.json(map) : res.status(404).json({ error: 'Map not found.' })
+  })
+  app.post('/api/maps/:id/duplicate', (req, res) => {
+    const original = maps.find((item) => item.id === req.params.id)
+    if (!original) return res.status(400).json({ error: 'Enter a map name.' })
+    const number = nextId++
+    const map = {...structuredClone(original),number,id:String(number) }
+    maps.unshift(map)
+    res.status(201).json(map)
   })
 
   app.delete('/api/maps/:id', (req, res) => {
@@ -57,6 +64,16 @@ export function createApp() {
   }
   app.patch('/api/maps/:id', updateMap)
   app.post('/api/maps/:id', updateMap)
+
+  app.post('/api/maps/:id/share', (req, res) => {
+    const map = maps.find((item) => item.id === req.params.id)
+    if (!map) return res.status(404).json({ error: 'Map not found.' })
+    const email = String(req.body?.email || '').trim().toLowerCase()
+    if (!email) return res.status(400).json({ error: 'Enter an email.' })
+    if (!map.collaborators) map.collaborators = []
+    if (!map.collaborators.includes(email)) map.collaborators.push(email)
+    res.json(map)
+  })
 
   app.post('/api/search', (req, res) => {
     const query = req.body?.query

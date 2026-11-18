@@ -132,8 +132,10 @@ function App() {
     return map
   }
 
-  async function chooseMap(asset) {
-    const map = await api('/maps', { method: 'POST', body: { name: asset.title, asset } })
+  async function chooseMap(template) {
+    const map = await api('/maps', { method: 'POST', body: {
+      name: template.title, selectedCountries: template.selectedCountries, styleId: template.styleId,
+    } })
     setMaps((existing) => [map, ...existing])
     return map
   }

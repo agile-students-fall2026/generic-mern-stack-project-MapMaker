@@ -1,7 +1,7 @@
 import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { searchMaps, getDisplayImage } from './mapCatalog.js'
+import { searchMaps } from './mapCatalog.js'
 import addAuthRoutes from './auth.js'
 
 const dist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../front-end/dist')
@@ -20,9 +20,14 @@ export function createApp() {
   app.post('/api/maps', (req, res) => {
     const name = String(req.body?.name || '').trim().slice(0, 80)
     if (!name) return res.status(400).json({ error: 'Enter a map name.' })
+    const selected = req.body?.selectedCountries || []
+    if (!Array.isArray(selected) || selected.some((id) => typeof id !== 'string' || !/^[A-Z]{3}$/.test(id))) {
+      return res.status(400).json({ error: 'Invalid country selection.' })
+    }
+    const styleId = ['atlas', 'blush', 'forest', 'slate'].includes(req.body?.styleId) ? req.body.styleId : 'atlas'
     const number = nextId++
     const map = { number, id: String(number), name, title: name,
-      asset: req.body.asset || null, image: req.body.asset?.thumbnail || null }
+      asset: null, selectedCountries: selected, styleId }
     maps.unshift(map)
     res.status(201).json(map)
   })
@@ -53,20 +58,12 @@ export function createApp() {
   app.patch('/api/maps/:id', updateMap)
   app.post('/api/maps/:id', updateMap)
 
-  app.post('/api/search', async (req, res) => {
+  app.post('/api/search', (req, res) => {
     const query = req.body?.query
-    if (typeof query !== 'string' || !query.trim() || query.length > 140) {
+    if (typeof query !== 'string' || query.length > 140) {
       return res.status(400).json({ error: 'Enter a search of up to 140 characters.' })
     }
-    res.json(await searchMaps(query, req.body?.cursor || null))
-  })
-
-  app.post('/api/map-image', async (req, res) => {
-    const pageId = req.body?.pageId
-    if (!Number.isSafeInteger(pageId) || pageId <= 0) {
-      return res.status(400).json({ error: 'Invalid map image.' })
-    }
-    res.json({ url: await getDisplayImage({ pageId }) })
+    res.json(searchMaps(query))
   })
 
   app.post('/api/chat', (req, res) => {

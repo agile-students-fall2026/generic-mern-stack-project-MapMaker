@@ -3,7 +3,6 @@ import { createApp } from '../app.js'
 
 describe('MapMaker Express API', () => {
   let server, base, mapId
-  const originalFetch = globalThis.fetch
 
   before(async () => {
     server = createApp().listen(0, '127.0.0.1')
@@ -12,12 +11,11 @@ describe('MapMaker Express API', () => {
   })
 
   after(async () => {
-    globalThis.fetch = originalFetch
     await new Promise((resolve) => server.close(resolve))
   })
 
   async function request(path, method = 'GET', body) {
-    const response = await originalFetch(base + path, {
+    const response = await fetch(base + path, {
       method, headers: { 'Content-Type': 'application/json' },
       body: body && JSON.stringify(body),
     })
@@ -77,30 +75,30 @@ describe('MapMaker Express API', () => {
     expect((await request('/api/chat', 'POST', { message: '' })).status).to.equal(400)
   })
 
-  it('validates map search and image requests', async () => {
-    expect((await request('/api/search', 'POST', { query: '' })).status).to.equal(400)
-    expect((await request('/api/map-image', 'POST', { pageId: 'oops' })).status).to.equal(400)
+  it('validates map search and country selections', async () => {
+    expect((await request('/api/search', 'POST', { query: 12 })).status).to.equal(400)
+    expect((await request('/api/search', 'POST', { query: 'x'.repeat(141) })).status).to.equal(400)
+    expect((await request('/api/maps', 'POST', { name: 'Test', selectedCountries: 'CAN' })).status).to.equal(400)
+    expect((await request('/api/map-image', 'POST', { pageId: 123 })).status).to.equal(404)
   })
 
-  it('searches Wikimedia through Express and filters non-map images', async () => {
-    globalThis.fetch = async (url, options) => {
-      if (!String(url).startsWith('https://commons.wikimedia.org/w/api.php')) return originalFetch(url, options)
-      const params = new URL(url).searchParams
-      const page = params.has('pageids')
-        ? { query: { pages: { 123: { imageinfo: [{ thumburl: 'https://upload.wikimedia.org/map-large.png' }] } } } }
-        : { query: { pages: {
-          123: { pageid: 123, title: 'File:New York Map.png', categories: [{ title: 'Category:Maps of New York' }],
-            imageinfo: [{ mime: 'image/png', thumburl: 'https://upload.wikimedia.org/map.png', descriptionurl: 'https://commons.wikimedia.org/wiki/File:Map.png' }] },
-          456: { pageid: 456, title: 'File:New York Park Photo.jpg', categories: [],
-            imageinfo: [{ mime: 'image/jpeg', thumburl: 'https://upload.wikimedia.org/photo.jpg' }] },
-        } } }
-      return new Response(JSON.stringify(page), { status: 200 })
-    }
-    const result = await request('/api/search', 'POST', { query: 'New York' })
-    expect(result.status).to.equal(200)
-    expect(result.data.results.map((item) => item.title)).to.deep.equal(['New York Map'])
-    expect((await request('/api/map-image', 'POST', { pageId: 123 })).data.url).to.include('map-large.png')
-    globalThis.fetch = originalFetch
+  it('returns editable sample maps without contacting external services', async () => {
+    const all = await request('/api/search', 'POST', { query: '' })
+    expect(all.data.results).to.have.length(6)
+    const europe = await request('/api/search', 'POST', { query: 'Europe' })
+    expect(europe.data.results).to.have.length(1)
+    expect(europe.data.results[0].selectedCountries).to.include('FRA')
+    expect((await request('/api/search', 'POST', { query: 'Roman Empire 117' })).data.results).to.deep.equal([])
+
+    const template = europe.data.results[0]
+    const created = await request('/api/maps', 'POST', {
+      name: template.title, selectedCountries: template.selectedCountries, styleId: template.styleId,
+    })
+    expect(created.status).to.equal(201)
+    expect(created.data.selectedCountries).to.deep.equal(template.selectedCountries)
+    expect(created.data.styleId).to.equal(template.styleId)
+    expect(created.data.asset).to.equal(null)
+    expect((await request('/api/maps/' + created.data.id, 'DELETE')).status).to.equal(204)
   })
 
   it('deletes a saved map', async () => {

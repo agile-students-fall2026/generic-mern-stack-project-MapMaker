@@ -11,6 +11,7 @@ import MapSearch from './MapSearch'
 import api from './api'
 import EditorProvider from './map-editor/EditorProvider'
 import { StylePage, EditTextPage, SourcesPage } from './map-editor/EditorScreens'
+import { ForgotPassword, ResetPassword } from './PasswordReset'
 
 
 function AuthPage({ isRegister }) {
@@ -69,6 +70,11 @@ function AuthPage({ isRegister }) {
         </form>
         {error && <p className="auth-error" role="alert">{error}</p>}
 
+        {!isRegister && (
+          <p>
+            <Link to="/forgot-password">Forgot password?</Link>
+          </p>
+        )}
         <p>
           {isRegister
             ? 'Already have an account?'
@@ -107,6 +113,8 @@ function MapRoutes({ maps, createMap, chooseMap, renameMap }) {
         <Route path="/edit-text" element={<EditTextPage onRenameMap={renameMap} />} />
         <Route path="/source" element={<SourcesPage />} />
         <Route path="/sources" element={<SourcesPage />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
 
       {backgroundLocation && (

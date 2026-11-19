@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import './MyMaps.css'
 
 
-function MyMaps({ maps, onCreateMap, onDeleteMap, mapError }){
+function MyMaps({ maps, onCreateMap, onDeleteMap, onDuplicateMap,onshareMap, mapError }){
     const [newMap,setNewMap]=useState("")
     const [error,setError]=useState("")
     async function createNewMap(event){
@@ -23,6 +23,20 @@ function MyMaps({ maps, onCreateMap, onDeleteMap, mapError }){
         if (!window.confirm(`Delete "${map.name}"?`)) return
         try {
             await onDeleteMap(map.number)
+        } catch (err) { setError(err.message) }
+    }
+    async function duplicateMap(map) {
+        try {
+            await onDuplicateMap(map.number)
+        } catch (err) { setError(err.message) }
+
+    }
+
+     async function shareMap(map) {
+        const email = window.prompt("Enter collaborator email:")
+        if (!email || email.trim() === "") return
+        try {
+            await onshareMap(map.number, email)
         } catch (err) { setError(err.message) }
     }
 
@@ -62,6 +76,8 @@ function MyMaps({ maps, onCreateMap, onDeleteMap, mapError }){
                 
                 </button>
                 <button type="button" className="delete-map" onClick={() => deleteMap(map)}>Delete</button>
+                <button type="button" className="duplicate-map" onClick={() => duplicateMap(map)}>Duplicate</button>
+                <button type="button" className="share-map" onClick={() => shareMap(map)}>Share</button>
             </div>
             ))}
             

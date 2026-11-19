@@ -47,6 +47,10 @@
 .my-maps .map-item { min-width: 0; }
 .my-maps .delete-map { background: none; color: #555; padding: 7px 2px; font-size: 12px; }
 .my-maps .delete-map:hover { background: none; color: #b42318; text-decoration: underline; }
+.my-maps .duplicate-map { background: none; color: #555; padding: 7px 2px; font-size: 12px; }
+.my-maps .duplicate-map:hover { background: none; color: #2563eb; text-decoration: underline; }
+.my-maps .share-map { background: none; color: #555; padding: 7px 2px; font-size: 12px; }
+.my-maps .share-map:hover { background: none; color: #2563eb; text-decoration: underline; }
 
 
 

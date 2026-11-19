@@ -93,7 +93,7 @@ function AuthPage({ isRegister }) {
 }
 
 
-function MapRoutes({ maps, createMap, chooseMap, renameMap, deleteMap, mapError }) {
+function MapRoutes({ maps, createMap, chooseMap, renameMap, deleteMap,duplicateMap,shareMap, mapError }) {
   const location = useLocation()
   const backgroundLocation = location.state?.backgroundLocation
 
@@ -106,7 +106,7 @@ function MapRoutes({ maps, createMap, chooseMap, renameMap, deleteMap, mapError 
         <Route path="/home" element={<Home onCreateMap={createMap} />} />
         <Route path="/search" element={<MapSearch onChooseMap={chooseMap} onCreateMap={createMap} />} />
         <Route path="/menu" element={<Menu />} />
-        <Route path="/MyMaps" element={<MyMaps maps={maps} onCreateMap={createMap} onDeleteMap={deleteMap} mapError={mapError} />} />
+        <Route path="/MyMaps" element={<MyMaps maps={maps} onCreateMap={createMap} onDeleteMap={deleteMap} onDuplicateMap={duplicateMap} onshareMap={shareMap} mapError={mapError} />} />
         <Route path="/chat" element={<AiChat />} />
         <Route path="/Map-Editor" element={<MapEditor onRenameMap={renameMap} />} />
         <Route path="/style" element={<StylePage />} />
@@ -157,6 +157,17 @@ function App() {
     await api('/maps/' + number, { method: 'DELETE' })
     setMaps((existing) => existing.filter((map) => map.number !== number))
   }
+  async function duplicateMap(number) {
+    const map = await api('/maps/'+number+'/duplicate',{ method: 'POST'})
+    setMaps((existing) => [map, ...existing])
+    return map
+  }
+  async function shareMap(number,email) {
+    const map = await api('/maps'+number+'/share',{ method: 'POST', body: {email}
+    } )
+    setMaps((existing) => existing.map((map) => map.number == number? updatedMap : map))
+    return map
+  }
 
   return (
     <EditorProvider>
@@ -167,6 +178,8 @@ function App() {
           chooseMap={chooseMap}
           renameMap={renameMap}
           deleteMap={deleteMap}
+          duplicateMap={duplicateMap}
+          shareMap={shareMap}
           mapError={mapError}
         />
       </Router>

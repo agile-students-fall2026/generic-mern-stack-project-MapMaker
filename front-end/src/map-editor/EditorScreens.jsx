@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import MapPreview from './MapPreview'
 import MapImage from './MapImage'
 import { STYLES, IMAGE_STYLES } from './editorData'
 import { useEditor } from './editorContext'
+import api from '../api'
 import './EditorScreens.css'
 
 export function EditorHeader() {
@@ -117,21 +118,38 @@ export function EditTextPage({ onRenameMap }) {
 export function SourcesPage() {
   const navigate = useNavigate()
   const { map } = useEditor()
+  const [result, setResult] = useState({ id: null, source: null, error: '' })
+
+  useEffect(() => {
+    if (map.id === 'demo-world') return
+    const controller = new AbortController()
+    api('/maps/' + encodeURIComponent(map.id) + '/sources', { signal: controller.signal })
+      .then((source) => {
+        if (!controller.signal.aborted) setResult({ id: map.id, source, error: '' })
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) setResult({ id: map.id, source: null, error: error.message })
+      })
+    return () => controller.abort()
+  }, [map.id])
+
+  const current = result.id === map.id ? result : null
   return (
     <EditorPanel title="Sources" map={map}>
-      {map.asset ? <>
-        <h3>{map.asset.title}</h3>
-        <p>Collection: {map.asset.provider}</p>
-        <p>Creator: {map.asset.author}</p>
-        <p>License: {map.asset.license}</p>
-        {map.asset.licenseUrl && <p><a href={map.asset.licenseUrl} target="_blank" rel="noopener noreferrer">License terms</a></p>}
-        <a href={map.asset.pageUrl} target="_blank" rel="noopener noreferrer">Original file and full attribution</a>
-      </> : <>
-        <h3>Natural Earth</h3>
-        <p>World country boundaries from the 1:110m Admin 0 Countries dataset (public domain). Highlighted countries are sample selections or were chosen by the user.</p>
-        <a href="https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-countries/"
-          target="_blank" rel="noopener noreferrer">View original map data</a>
-      </>}
+      {map.id === 'demo-world' ? <p>Open a saved map to view its sources.</p>
+        : !current ? <p role="status">Loading sources...</p>
+          : current.error ? <p role="alert">{current.error}</p>
+            : <>
+              <h3>{current.source.title}</h3>
+              {current.source.description && <p>{current.source.description}</p>}
+              {current.source.provider && <p>Collection: {current.source.provider}</p>}
+              {current.source.creator && <p>Creator: {current.source.creator}</p>}
+              {current.source.license && <p>License: {current.source.license}</p>}
+              {current.source.licenseUrl && <p><a href={current.source.licenseUrl} target="_blank" rel="noopener noreferrer">License terms</a></p>}
+              <a href={current.source.url} target="_blank" rel="noopener noreferrer">
+                {map.asset ? 'Original file and full attribution' : 'View original map data'}
+              </a>
+            </>}
       <div className="mm-actions"><button onClick={() => navigate('/Map-Editor')}>Close</button></div>
     </EditorPanel>
   )

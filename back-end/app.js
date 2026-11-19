@@ -35,6 +35,21 @@ export function createApp() {
     const map = maps.find((item) => item.id === req.params.id)
     return map ? res.json(map) : res.status(404).json({ error: 'Map not found.' })
   })
+
+  app.get('/api/maps/:id/sources', (req, res) => {
+    const map = maps.find((item) => item.id === req.params.id)
+    if (!map) return res.status(404).json({ error: 'Map not found.' })
+    if (map.asset) return res.json({
+      title: map.asset.title, provider: map.asset.provider, creator: map.asset.author,
+      license: map.asset.license, licenseUrl: map.asset.licenseUrl, url: map.asset.pageUrl,
+    })
+    res.json({
+      title: 'Natural Earth',
+      description: 'World country boundaries from the 1:110m Admin 0 Countries dataset (public domain). Highlighted countries are sample selections or were chosen by the user.',
+      url: 'https://www.naturalearthdata.com/downloads/110m-cultural-vectors/110m-admin-0-countries/',
+    })
+  })
+
   app.post('/api/maps/:id/duplicate', (req, res) => {
     const original = maps.find((item) => item.id === req.params.id)
     if (!original) return res.status(400).json({ error: 'Enter a map name.' })

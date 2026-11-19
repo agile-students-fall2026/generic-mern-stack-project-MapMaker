@@ -49,6 +49,14 @@ describe('MapMaker Express API', () => {
     expect((await request('/api/maps')).data).to.have.length(1)
   })
 
+  it('returns source information for a saved map', async () => {
+    const response = await request('/api/maps/' + mapId + '/sources')
+    expect(response.status).to.equal(200)
+    expect(response.data.title).to.equal('Natural Earth')
+    expect(response.data.url).to.include('naturalearthdata.com')
+    expect((await request('/api/maps/unknown/sources')).status).to.equal(404)
+  })
+
   it('duplicates maps and preserves their properties', async () => {
     const created = await request('/api/maps', 'POST', { name: 'Original map' })
     const id = created.data.id

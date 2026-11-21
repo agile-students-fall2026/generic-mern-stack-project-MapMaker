@@ -1,7 +1,7 @@
 import { useState} from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import './MyMaps.css'
-
+import BackArrow from './BackArrow'
 
 function MyMaps({ maps, onCreateMap, onDeleteMap, onDuplicateMap,onshareMap, mapError }){
     const [newMap,setNewMap]=useState("")
@@ -45,6 +45,7 @@ function MyMaps({ maps, onCreateMap, onDeleteMap, onDuplicateMap,onshareMap, map
     const location = useLocation()
     return(
         <div className="my-maps">
+            <BackArrow/>
             <header>
                 <h2>
                 Logo

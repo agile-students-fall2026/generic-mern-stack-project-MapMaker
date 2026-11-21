@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { cleanMapQuery, searchMaps } from './map-editor/mapCatalog'
 import MapPreview from './map-editor/MapPreview'
 import './MapSearch.css'
+import BackArrow from './BackArrow'
 
 const EXAMPLES = ['North America', 'South America', 'Europe', 'Asia', 'Africa', 'Oceania']
 
@@ -68,6 +69,7 @@ export default function MapSearch({ onChooseMap, onCreateMap }) {
 
   return (
     <main className="map-search">
+      <BackArrow/>
       <button onClick={() => navigate('/menu', { state: { backgroundLocation: location } })}>Menu</button>
       <h1>Choose a map</h1>
       <form className="map-search-form" onSubmit={search}>

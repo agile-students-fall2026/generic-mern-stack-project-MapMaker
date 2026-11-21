@@ -1,0 +1,11 @@
+.Back-arrow{
+ position: fixed;
+    top: 24px;
+    left: 24px;
+    z-index: 1000;
+    font-size: 24px;
+    color:white;
+    background-color: #2563eb;
+
+
+}

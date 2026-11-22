@@ -7,6 +7,7 @@ import { STYLES, IMAGE_STYLES } from './map-editor/editorData'
 import { useEditor } from './map-editor/editorContext'
 import api from './api'
 import './Map-Editor.css'
+import BackArrow from './BackArrow'
 
 async function exportPng(svg, map, colors, rasterImage) {
   let url
@@ -134,6 +135,7 @@ export default function MapEditor({ onRenameMap }) {
 
   return (
     <div className="mm-shell">
+      <BackArrow/>
       <main className="mm-content">
         <EditorHeader />
 

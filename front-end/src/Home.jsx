@@ -1,18 +1,19 @@
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import api from './api'
 import './Home.css'
-
-const EXAMPLES = [
-  "Europe",
-  "North America"
-]
 
 function Home({ onCreateMap }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [description, setDescription] = useState("")
   const [error, setError] = useState('')
+  const [examples, setExamples] = useState([])
+
+  useEffect(() => {
+    api('/examples').then(setExamples).catch((err) => setError(err.message))
+  }, [])
 
   function createMap(event) {
     event.preventDefault()
@@ -61,7 +62,7 @@ function Home({ onCreateMap }) {
 
       <h3>Examples</h3>
 
-      {EXAMPLES.map((example) => (
+      {examples.map((example) => (
         <button
           className="example"
           key={example}

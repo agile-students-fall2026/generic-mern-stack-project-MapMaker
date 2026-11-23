@@ -5,6 +5,10 @@ import { searchMaps } from './mapCatalog.js'
 import addAuthRoutes from './auth.js'
 
 const dist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../front-end/dist')
+const styles = ['atlas', 'blush', 'forest', 'slate']
+const imageStyles = ['original', 'black-white', 'warm']
+const validCountries = (countries) => Array.isArray(countries)
+  && countries.every((id) => typeof id === 'string' && /^[A-Z]{3}$/.test(id))
 
 export function createApp() {
   const app = express()
@@ -18,13 +22,13 @@ export function createApp() {
   app.get('/api/maps', (req, res) => res.json(maps))
 
   app.post('/api/maps', (req, res) => {
-    const name = String(req.body?.name || '').trim().slice(0, 80)
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim().slice(0, 80) : ''
     if (!name) return res.status(400).json({ error: 'Enter a map name.' })
     const selected = req.body?.selectedCountries || []
-    if (!Array.isArray(selected) || selected.some((id) => typeof id !== 'string' || !/^[A-Z]{3}$/.test(id))) {
+    if (!validCountries(selected)) {
       return res.status(400).json({ error: 'Invalid country selection.' })
     }
-    const styleId = ['atlas', 'blush', 'forest', 'slate'].includes(req.body?.styleId) ? req.body.styleId : 'atlas'
+    const styleId = styles.includes(req.body?.styleId) ? req.body.styleId : 'atlas'
     const number = nextId++
     const map = { number, id: String(number), name, title: name,
       asset: null, selectedCountries: selected, styleId }
@@ -52,9 +56,10 @@ export function createApp() {
 
   app.post('/api/maps/:id/duplicate', (req, res) => {
     const original = maps.find((item) => item.id === req.params.id)
-    if (!original) return res.status(400).json({ error: 'Enter a map name.' })
+    if (!original) return res.status(404).json({ error: 'Map not found.' })
     const number = nextId++
-    const map = {...structuredClone(original),number,id:String(number) }
+    const name = original.name + ' (copy)'
+    const map = { ...structuredClone(original), number, id: String(number), name, title: name, collaborators: [] }
     maps.unshift(map)
     res.status(201).json(map)
   })
@@ -69,12 +74,33 @@ export function createApp() {
   function updateMap(req, res) {
     const map = maps.find((item) => item.id === req.params.id)
     if (!map) return res.status(404).json({ error: 'Map not found.' })
-    const fields = ['title', 'subtitle', 'styleId', 'imageStyle', 'selectedCountries', 'legendLabels']
-    for (const field of fields) {
-      if (req.body?.[field] !== undefined) map[field] = req.body[field]
+    const changes = req.body || {}
+    const title = changes.title ?? changes.name
+    if (title !== undefined && (typeof title !== 'string' || !title.trim() || title.trim().length > 80)) {
+      return res.status(400).json({ error: 'Enter a map title of up to 80 characters.' })
     }
-    if (typeof req.body?.name === 'string') map.title = req.body.name.slice(0, 80)
-    if (typeof map.title === 'string') map.name = map.title
+    if (changes.subtitle !== undefined && (typeof changes.subtitle !== 'string' || changes.subtitle.length > 160)) {
+      return res.status(400).json({ error: 'Invalid subtitle.' })
+    }
+    if (changes.styleId !== undefined && !styles.includes(changes.styleId)) {
+      return res.status(400).json({ error: 'Invalid map style.' })
+    }
+    if (changes.imageStyle !== undefined && !imageStyles.includes(changes.imageStyle)) {
+      return res.status(400).json({ error: 'Invalid image style.' })
+    }
+    if (changes.selectedCountries !== undefined && !validCountries(changes.selectedCountries)) {
+      return res.status(400).json({ error: 'Invalid country selection.' })
+    }
+    if (changes.legendLabels !== undefined && (!Array.isArray(changes.legendLabels)
+      || changes.legendLabels.length !== 2
+      || changes.legendLabels.some((label) => typeof label !== 'string' || !label.trim() || label.length > 48))) {
+      return res.status(400).json({ error: 'Enter two legend labels of up to 48 characters.' })
+    }
+    const fields = ['subtitle', 'styleId', 'imageStyle', 'selectedCountries', 'legendLabels']
+    for (const field of fields) {
+      if (changes[field] !== undefined) map[field] = changes[field]
+    }
+    if (title !== undefined) map.title = map.name = title.trim()
     res.json(map)
   }
   app.patch('/api/maps/:id', updateMap)
@@ -84,7 +110,7 @@ export function createApp() {
     const map = maps.find((item) => item.id === req.params.id)
     if (!map) return res.status(404).json({ error: 'Map not found.' })
     const email = String(req.body?.email || '').trim().toLowerCase()
-    if (!email) return res.status(400).json({ error: 'Enter an email.' })
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email.' })
     if (!map.collaborators) map.collaborators = []
     if (!map.collaborators.includes(email)) map.collaborators.push(email)
     res.json(map)

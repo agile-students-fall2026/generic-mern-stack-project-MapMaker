@@ -49,6 +49,41 @@ describe('MapMaker Express API', () => {
     expect((await request('/api/maps')).data).to.have.length(1)
   })
 
+  it('keeps title, legend, style and country edits when saved separately', async () => {
+    const created = await request('/api/maps', 'POST', { name: 'Travel map' })
+    const path = '/api/maps/' + created.data.id
+    expect((await request(path, 'POST', {
+      title: '  Europe trip  ', subtitle: 'Summer', legendLabels: ['Visited', 'Other'],
+    })).status).to.equal(200)
+    expect((await request(path, 'POST', { styleId: 'forest' })).status).to.equal(200)
+    expect((await request(path, 'POST', { selectedCountries: ['FRA', 'DEU'] })).status).to.equal(200)
+    const saved = (await request(path)).data
+    expect(saved.title).to.equal('Europe trip')
+    expect(saved.name).to.equal('Europe trip')
+    expect(saved.subtitle).to.equal('Summer')
+    expect(saved.legendLabels).to.deep.equal(['Visited', 'Other'])
+    expect(saved.styleId).to.equal('forest')
+    expect(saved.selectedCountries).to.deep.equal(['FRA', 'DEU'])
+  })
+
+  it('rejects invalid map edits without changing the saved map', async () => {
+    const created = await request('/api/maps', 'POST', { name: 'Safe map' })
+    const path = '/api/maps/' + created.data.id
+    const invalidEdits = [
+      { title: '  ' }, { title: 5 }, { title: 'x'.repeat(81) },
+      { styleId: 'unknown' }, { imageStyle: 'unknown' },
+      { selectedCountries: 'CAN' }, { selectedCountries: ['bad'] },
+      { legendLabels: ['One'] }, { legendLabels: ['One', ''] },
+      { subtitle: 123 }, { subtitle: 'x'.repeat(161) },
+      { title: 'Should not save', styleId: 'unknown' },
+    ]
+    for (const changes of invalidEdits) {
+      expect((await request(path, 'POST', changes)).status).to.equal(400)
+    }
+    expect((await request(path)).data.name).to.equal('Safe map')
+    expect((await request(path)).data.styleId).to.equal('atlas')
+  })
+
   it('returns source information for a saved map', async () => {
     const response = await request('/api/maps/' + mapId + '/sources')
     expect(response.status).to.equal(200)
@@ -63,15 +98,19 @@ describe('MapMaker Express API', () => {
     await request('/api/maps/' + id, 'PATCH', {
       selectedCountries: ['CAN'], styleId: 'forest',
     })
+    await request('/api/maps/' + id + '/share', 'POST', { email: 'student@example.com' })
     const before = await request('/api/maps')
     const duplicated = await request('/api/maps/' + id + '/duplicate', 'POST')
     expect(duplicated.status).to.equal(201)
     expect(duplicated.data.id).not.to.equal(id)
     expect(duplicated.data.selectedCountries).to.deep.equal(['CAN'])
     expect(duplicated.data.styleId).to.equal('forest')
+    expect(duplicated.data.name).to.equal('Original map (copy)')
+    expect(duplicated.data.collaborators).to.deep.equal([])
     expect((await request('/api/maps')).data).to.have.length(before.data.length + 1)
     await request('/api/maps/' + duplicated.data.id, 'PATCH', { selectedCountries: ['USA'] })
     expect((await request('/api/maps/' + id)).data.selectedCountries).to.deep.equal(['CAN'])
+    expect((await request('/api/maps/missing/duplicate', 'POST')).status).to.equal(404)
   })
 
   it('returns 404 for missing maps and routes', async () => {
@@ -136,9 +175,12 @@ describe('MapMaker Express API', () => {
   it('shares maps and retrieves collaborators', async () => {
     const created = await request('/api/maps', 'POST', { name: 'Shared map' })
     const id = created.data.id
-    const collaborator = { email: 'collaborator@example.com' }
+    const collaborator = { email: 'Collaborator@Example.com' }
     const shared = await request('/api/maps/' + id + '/share', 'POST', collaborator)
     expect(shared.status).to.equal(200)
-    expect((await request('/api/maps/' + id)).data.collaborators).to.include(collaborator.email)
+    expect((await request('/api/maps/' + id)).data.collaborators).to.deep.equal(['collaborator@example.com'])
+    expect((await request('/api/maps/' + id + '/share', 'POST', collaborator)).data.collaborators).to.have.length(1)
+    expect((await request('/api/maps/' + id + '/share', 'POST', { email: 'not-an-email' })).status).to.equal(400)
+    expect((await request('/api/maps/missing/share', 'POST', collaborator)).status).to.equal(404)
   })
 })

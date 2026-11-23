@@ -52,6 +52,8 @@ Open the address shown by Vite (normally `http://localhost:5173`). Vite forwards
 
 Registration and login use Express routes `/api/register` and `/api/login`. Maps, sample map searches, and chat also use `/api` routes. The Sprint 2 server stores users and maps in memory, so they disappear on restart. Passwords are hashed, but there are no login sessions or database yet. Chat returns a mock response.
 
+Sharing only saves collaborator email addresses in the mock map data; it does not grant another account access yet.
+
 Search shows six editable sample maps from mock JSON in Express, with country boundaries from Natural Earth. They are examples, not AI-generated or historical research results. The previous live Wikimedia map search is preserved on the local `vincent-live-map-search-next-sprint` branch for later work.
 
 **Run backend tests and coverage:**

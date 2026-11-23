@@ -6,6 +6,7 @@ import BackArrow from './BackArrow'
 function MyMaps({ maps, onCreateMap, onDeleteMap, onDuplicateMap,onshareMap, mapError }){
     const [newMap,setNewMap]=useState("")
     const [error,setError]=useState("")
+    const [message,setMessage]=useState("")
     async function createNewMap(event){
         event.preventDefault()
         if (newMap.trim()==="") return
@@ -37,7 +38,9 @@ function MyMaps({ maps, onCreateMap, onDeleteMap, onDuplicateMap,onshareMap, map
         if (!email || email.trim() === "") return
         try {
             await onshareMap(map.number, email)
-        } catch (err) { setError(err.message) }
+            setError("")
+            setMessage("Collaborator saved for this demo.")
+        } catch (err) { setError(err.message); setMessage("") }
     }
 
 
@@ -59,7 +62,7 @@ function MyMaps({ maps, onCreateMap, onDeleteMap, onDuplicateMap,onshareMap, map
             
         <h1>My Maps</h1>
         {mapError && <p role="alert">Could not load maps: {mapError}</p>}
-        {maps.length === 0 && !mapError && <p>No maps yet. Create one below or browse historical maps.</p>}
+        {maps.length === 0 && !mapError && <p>No maps yet. Create one below or browse sample maps.</p>}
          <div className="map-list">
             {maps.map((map)=>(
             <div className="map-item" key={map.number}>
@@ -95,7 +98,8 @@ function MyMaps({ maps, onCreateMap, onDeleteMap, onDuplicateMap,onshareMap, map
             </button>
         </form>
         {error && <p role="alert">{error}</p>}
-        <button onClick={() => navigate('/search')}>Browse historical maps</button>
+        {message && <p role="status">{message}</p>}
+        <button onClick={() => navigate('/search')}>Browse sample maps</button>
       
 
         </div>

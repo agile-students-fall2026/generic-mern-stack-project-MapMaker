@@ -163,10 +163,9 @@ function App() {
     return map
   }
   async function shareMap(number,email) {
-    const map = await api('/maps'+number+'/share',{ method: 'POST', body: {email}
-    } )
-    setMaps((existing) => existing.map((map) => map.number == number? updatedMap : map))
-    return map
+    const updatedMap = await api('/maps/' + number + '/share', { method: 'POST', body: { email } })
+    setMaps((existing) => existing.map((map) => map.number === number ? updatedMap : map))
+    return updatedMap
   }
 
   return (

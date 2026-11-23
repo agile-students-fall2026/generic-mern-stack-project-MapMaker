@@ -69,7 +69,7 @@ async function exportPng(svg, map, colors, rasterImage) {
 export default function MapEditor({ onRenameMap }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { map, openMap, updateMap } = useEditor()
+  const { map, saveError, openMap, updateMap } = useEditor()
   const [instruction, setInstruction] = useState('')
   const [message, setMessage] = useState('')
   const [exportOpen, setExportOpen] = useState(false)
@@ -138,6 +138,7 @@ export default function MapEditor({ onRenameMap }) {
       <BackArrow/>
       <main className="mm-content">
         <EditorHeader />
+        {saveError && <p role="alert">Could not save map: {saveError}</p>}
 
         <div className="mm-editor-title-row">
           <h1 className="mm-map-title">{map.title}</h1>

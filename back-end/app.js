@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { searchMaps } from './mapCatalog.js'
 import addAuthRoutes from './auth.js'
 import addHomeRoutes from './home.js'
+import addChatRoutes from './chat.js'
 
 const dist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../front-end/dist')
 
@@ -17,6 +18,7 @@ export function createApp() {
   app.get('/api/health', (req, res) => res.json({ ok: true, message: 'MapMaker backend is running' }))
   addAuthRoutes(app)
   addHomeRoutes(app)
+  addChatRoutes(app)
   app.get('/api/maps', (req, res) => res.json(maps))
 
   app.post('/api/maps', (req, res) => {

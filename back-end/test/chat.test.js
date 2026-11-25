@@ -71,4 +71,9 @@ describe('AI Chat', () => {
 
     expect(response.status).to.equal(400)
   })
+
+  it('rejects a chat message that is not text', async () => {
+    const response = await post('/api/chat', { message: 123 })
+    expect(response.status).to.equal(400)
+  })
 })

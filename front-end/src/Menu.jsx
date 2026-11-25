@@ -15,7 +15,7 @@ function Menu() {
     return (
         <div className="menu-overlay">
             <div className="menu-panel">
-                <button className="close-button" onClick={() => navigate(-1)}>
+                <button className="close-button" onClick={() => navigate(window.history.state?.idx > 0 ? -1 : '/home')}>
                     Close
                 </button>
 

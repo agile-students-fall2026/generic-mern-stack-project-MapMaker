@@ -128,12 +128,6 @@ export function createApp() {
     res.json(searchMaps(query))
   })
 
-  app.post('/api/chat', (req, res) => {
-    const message = String(req.body?.message || '').trim()
-    if (!message) return res.status(400).json({ error: 'Enter a message.' })
-    res.json({ reply: `Demo response: received "${message.slice(0, 180)}". AI is not connected yet.` })
-  })
-
   app.use('/api', (req, res) => res.status(404).json({ error: 'API route not found.' }))
   app.use(express.static(dist))
   app.get('/{*path}', (req, res) => res.sendFile(path.join(dist, 'index.html')))

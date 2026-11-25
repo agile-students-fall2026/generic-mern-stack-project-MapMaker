@@ -21,19 +21,21 @@ function AiChat(){
 
     useEffect(() => {
         api('/chat').then((data) => {
-            if (!firstMessage) setChat([{ from: "AI", text: data.greeting }])
+            if (!firstMessage) setChat((current) => current.length ? current : [{ from: "AI", text: data.greeting }])
             setSuggestions(data.suggestions)
         }).catch((err) => setChat((current) => [...current, { from: "AI", text: err.message }]))
     }, [firstMessage])
 
     async function sendMessage(event){
         event.preventDefault()
-        if (message.trim()==="") return
-        try {
-            const { reply } = await api('/chat', { method: 'POST', body: { message } })
-            setChat([...chat, { from: "You", text: message }, { from: "AI", text: reply }])
-        } catch (err) { setChat([...chat, { from: "AI", text: err.message }]) }
+        const text=message.trim()
+        if (!text) return
         setMessage("")
+        setChat((current) => [...current, { from: "You", text }])
+        try {
+            const { reply } = await api('/chat', { method: 'POST', body: { message: text } })
+            setChat((current) => [...current, { from: "AI", text: reply }])
+        } catch (err) { setChat((current) => [...current, { from: "AI", text: err.message }]) }
     }
 
     return(
@@ -57,7 +59,7 @@ function AiChat(){
                     </div>
                 ))}
             </div>
-            
+
             <div className="chat-suggestions">
                 {suggestions.map((suggestion)=>(
                     <button type="button" className="chat-suggestion" key={suggestion} onClick={()=>setMessage(suggestion)}>{suggestion}</button>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import MapPreview from './map-editor/MapPreview'
 import MapImage from './map-editor/MapImage'
@@ -15,17 +15,27 @@ function AiChat(){
     const firstMessage=location.state?.message
     const [chat, setChat]=useState(firstMessage
         ? [{ from: "You", text: firstMessage }, { from: "AI", text: location.state?.reply || "Request received." }]
-        : [{ from: "AI", text: "Hi! Tell me what you want to change on your map." }]
+        : []
     )
+    const [suggestions, setSuggestions]=useState([])
+
+    useEffect(() => {
+        api('/chat').then((data) => {
+            if (!firstMessage) setChat((current) => current.length ? current : [{ from: "AI", text: data.greeting }])
+            setSuggestions(data.suggestions)
+        }).catch((err) => setChat((current) => [...current, { from: "AI", text: err.message }]))
+    }, [firstMessage])
 
     async function sendMessage(event){
         event.preventDefault()
-        if (message.trim()==="") return
-        try {
-            const { reply } = await api('/chat', { method: 'POST', body: { message } })
-            setChat([...chat, { from: "You", text: message }, { from: "AI", text: reply }])
-        } catch (err) { setChat([...chat, { from: "AI", text: err.message }]) }
+        const text=message.trim()
+        if (!text) return
         setMessage("")
+        setChat((current) => [...current, { from: "You", text }])
+        try {
+            const { reply } = await api('/chat', { method: 'POST', body: { message: text } })
+            setChat((current) => [...current, { from: "AI", text: reply }])
+        } catch (err) { setChat((current) => [...current, { from: "AI", text: err.message }]) }
     }
 
     return(
@@ -47,6 +57,12 @@ function AiChat(){
                         <span className="chat-name">{item.from}</span>
                         <p className="chat-bubble">{item.text}</p>
                     </div>
+                ))}
+            </div>
+
+            <div className="chat-suggestions">
+                {suggestions.map((suggestion)=>(
+                    <button type="button" className="chat-suggestion" key={suggestion} onClick={()=>setMessage(suggestion)}>{suggestion}</button>
                 ))}
             </div>
 
